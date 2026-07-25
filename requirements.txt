@@ -1,0 +1,17 @@
+crewai[tools]>=0.85.0
+langgraph>=0.2.0
+langchain-groq
+langchain-community
+pydantic>=2.9
+pydantic-settings
+python-dotenv
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+psycopg2-binary
+alembic
+redis
+celery[redis]
+tenacity
+tavily-python
+sentry-sdk
