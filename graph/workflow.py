@@ -11,6 +11,9 @@ Alleen harde Python-checks, geen LLM-supervisor.
 
 from typing import TypedDict, List, Optional
 from langgraph.graph import StateGraph, END
+from crewai import Task, Crew
+
+from agents.researcher import researcher
 
 
 class PipelineState(TypedDict):
@@ -29,12 +32,55 @@ class PipelineState(TypedDict):
 # ============================================
 
 def researcher_node(state: PipelineState) -> PipelineState:
-    """Stap 1: Vindt bedrijven + doet diep onderzoek"""
+    """
+    Stap 1: Vindt bedrijven + doet diep onderzoek
+    """
     print("→ Stap 1: Researcher werkt...")
     state["current_step"] = "researcher"
-    # TODO: echte agent call
-    state["companies"] = []
-    state["research"] = []
+
+    try:
+        criteria = state.get("criteria", "")
+
+        # Task voor de Researcher
+        research_task = Task(
+            description=f"""
+            Zoek 3 relevante B2B bedrijven die goed matchen met deze criteria:
+
+            {criteria}
+
+            Voor elk bedrijf lever je:
+            - Bedrijfsnaam
+            - Website
+            - Korte beschrijving wat ze doen
+            - Mogelijke pijnpunten of kansen
+            - Mogelijke beslisser (functie)
+
+            Gebruik de web_search tool voor actuele informatie.
+            Wees feitelijk en concreet. Geen aannames.
+            """,
+            expected_output="Een duidelijke lijst van 3 bedrijven met naam, website, beschrijving, pijnpunten en beslisser.",
+            agent=researcher
+        )
+
+        # Kleine crew met alleen deze agent
+        crew = Crew(
+            agents=[researcher],
+            tasks=[research_task],
+            verbose=True
+        )
+
+        result = crew.kickoff()
+
+        # Resultaat opslaan in state
+        state["research"] = [{"raw_output": str(result)}]
+        state["companies"] = [{"raw_output": str(result)}]
+
+        print("✓ Researcher klaar")
+
+    except Exception as e:
+        print(f"✗ Fout in Researcher: {e}")
+        state["error"] = str(e)
+
     return state
 
 
@@ -95,7 +141,6 @@ def build_workflow():
     workflow.add_edge("researcher", "market_intel")
     workflow.add_edge("market_intel", "qualifier")
 
-    # Harde check
     workflow.add_conditional_edges(
         "qualifier",
         should_write,
