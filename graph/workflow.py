@@ -1,9 +1,12 @@
 """
-LangGraph Workflow - Deterministic Sales Pipeline
+LangGraph Workflow - Max 4 agents + deterministic
 =================================================
-- Vaste volgorde van stappen
-- Conditional edges alleen op harde Python-checks
-- Voorbereid op human-in-the-loop (interrupt)
+1. Researcher
+2. Market Intelligence
+3. Qualifier
+4. Writer
+
+Alleen harde Python-checks, geen LLM-supervisor.
 """
 
 from typing import TypedDict, List, Optional
@@ -17,88 +20,91 @@ class PipelineState(TypedDict):
     market_insights: str
     scored_leads: List[dict]
     messages: List[dict]
-    approved_messages: List[dict]
     current_step: str
     error: Optional[str]
 
 
-def find_leads(state: PipelineState) -> PipelineState:
-    print("→ Stap 1: Lead Finder werkt...")
-    state["current_step"] = "find_leads"
+# ============================================
+# NODES
+# ============================================
+
+def researcher_node(state: PipelineState) -> PipelineState:
+    """Stap 1: Vindt bedrijven + doet diep onderzoek"""
+    print("→ Stap 1: Researcher werkt...")
+    state["current_step"] = "researcher"
+    # TODO: echte agent call
     state["companies"] = []
-    return state
-
-
-def research_companies(state: PipelineState) -> PipelineState:
-    print("→ Stap 2: Researcher werkt...")
-    state["current_step"] = "research"
     state["research"] = []
     return state
 
 
-def market_intelligence(state: PipelineState) -> PipelineState:
-    print("→ Stap 3: Market Intelligence werkt...")
+def market_intel_node(state: PipelineState) -> PipelineState:
+    """Stap 2: Wat werkt en wat faalt"""
+    print("→ Stap 2: Market Intelligence werkt...")
     state["current_step"] = "market_intel"
     state["market_insights"] = ""
     return state
 
 
-def qualify_leads(state: PipelineState) -> PipelineState:
-    print("→ Stap 4: Qualifier werkt...")
-    state["current_step"] = "qualify"
+def qualifier_node(state: PipelineState) -> PipelineState:
+    """Stap 3: Strenge scoring"""
+    print("→ Stap 3: Qualifier werkt...")
+    state["current_step"] = "qualifier"
     state["scored_leads"] = []
     return state
 
 
-def write_messages(state: PipelineState) -> PipelineState:
-    print("→ Stap 5: Message Writer werkt (LinkedIn connectienotitie + DM)...")
-    state["current_step"] = "write_messages"
+def writer_node(state: PipelineState) -> PipelineState:
+    """Stap 4: Schrijft LinkedIn connectienotitie + DM"""
+    print("→ Stap 4: Writer werkt...")
+    state["current_step"] = "writer"
     state["messages"] = []
     return state
 
 
-def human_approval(state: PipelineState) -> PipelineState:
-    print("→ Stap 6: Wachten op human approval...")
-    state["current_step"] = "human_approval"
-    # Hier komt later: interrupt()
-    return state
+# ============================================
+# HARD PYTHON CHECK
+# ============================================
 
-
-def should_write_messages(state: PipelineState) -> str:
-    """Deterministic check: alleen doorgaan bij score >= 70"""
+def should_write(state: PipelineState) -> str:
+    """
+    Alleen doorgaan naar Writer als er leads zijn met score >= 70.
+    Geen LLM-oordeel.
+    """
     scored = state.get("scored_leads", [])
     good_leads = [lead for lead in scored if lead.get("score", 0) >= 70]
 
     if good_leads:
-        return "write_messages"
+        return "writer"
     return "end"
 
+
+# ============================================
+# GRAPH
+# ============================================
 
 def build_workflow():
     workflow = StateGraph(PipelineState)
 
-    workflow.add_node("find_leads", find_leads)
-    workflow.add_node("research", research_companies)
-    workflow.add_node("market_intel", market_intelligence)
-    workflow.add_node("qualify", qualify_leads)
-    workflow.add_node("write_messages", write_messages)
-    workflow.add_node("human_approval", human_approval)
+    workflow.add_node("researcher", researcher_node)
+    workflow.add_node("market_intel", market_intel_node)
+    workflow.add_node("qualifier", qualifier_node)
+    workflow.add_node("writer", writer_node)
 
-    workflow.set_entry_point("find_leads")
-    workflow.add_edge("find_leads", "research")
-    workflow.add_edge("research", "market_intel")
-    workflow.add_edge("market_intel", "qualify")
+    workflow.set_entry_point("researcher")
+    workflow.add_edge("researcher", "market_intel")
+    workflow.add_edge("market_intel", "qualifier")
 
+    # Harde check
     workflow.add_conditional_edges(
-        "qualify",
-        should_write_messages,
+        "qualifier",
+        should_write,
         {
-            "write_messages": "write_messages",
+            "writer": "writer",
             "end": END
         }
     )
 
-    workflow.add_edge("write_messages", "human_approval")
-    workflow.add_edge("human_approval", END)
+    workflow.add_edge("writer", END)
 
     return workflow.compile()

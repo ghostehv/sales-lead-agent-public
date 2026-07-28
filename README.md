@@ -1,57 +1,37 @@
-# Sales Lead Agent (Public)
+# Sales Lead Agent
 
-Python AI multi-agent system for B2B lead finding, research, scoring and personalized outreach.
+Python AI multi-agent system for B2B lead finding, research, scoring and LinkedIn outreach preparation.
 
-## Current Focus
-- Deterministic LangGraph pipeline (no LLM deciding the flow)
-- Strong research + scoring agents
-- Human-in-the-loop before any outreach action
-- Moving from cold email → LinkedIn Connection Route (safer & higher response)
-
-## Architecture
+## Architecture (max 4 agents)
 
 ```
-Lead Finder → Researcher → Market Intelligence → Qualifier → Message Writer → Human Approval
+1. Researcher          → Vindt bedrijven + diep onderzoek
+2. Market Intelligence → Wat werkt / wat faalt
+3. Qualifier           → Strenge scoring (0-100)
+4. Writer              → LinkedIn connectienotitie + follow-up DM
 ```
 
-- Hard Python checks (e.g. score >= 70)
-- Prepared for LangGraph `interrupt()` before sending anything
-- Tools: Tavily for search
+Daarna: **Human Approval** (jij beslist wat er verstuurd wordt).
 
-## Agents
-1. **Lead Finder** – Finds relevant companies
-2. **Researcher** – Deep company research
-3. **Market Intelligence** – What works / what fails in outreach
-4. **Qualifier** – Scores leads 0-100 (strict)
-5. **Writer** – Creates personalized connection notes + follow-up DMs
-6. **Supervisor / Human Approval** – Final quality + reality check
-
-## Tech Stack
-- LangGraph (main orchestration)
-- CrewAI agents
-- Groq LLM
-- Tavily Search
-- Pydantic + SQLAlchemy
+### Belangrijke keuzes
+- Maximaal 4 agents (voorkomt onderlinge ruis)
+- Deterministic LangGraph flow
+- Alleen harde Python-checks (`if score >= 70`)
+- Geen LLM-supervisor
+- Gericht op LinkedIn Connection Route
 
 ## Setup
 
-1. Clone the repo
-2. Copy `.env.example` to `.env` and add your keys:
-   - GROQ_API_KEY
-   - TAVILY_API_KEY
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run:
-   ```bash
-   python main.py
-   ```
-
-## Important Notes
-- This version focuses on **preparation** of high-quality outreach (especially LinkedIn Connection Route).
-- No automatic sending yet (by design – human approval required).
-- LinkedIn automation is intentionally cautious due to high ban risk.
+1. Clone de repo
+2. Kopieer `.env.example` naar `.env` en vul je keys in
+3. Installeer dependencies:
+```bash
+pip install -r requirements.txt
+```
+4. Start:
+```bash
+python main.py
+```
 
 ## Status
-Work in progress. Core pipeline is deterministic and ready for further development.
+Core pipeline is deterministic en klaar voor verdere uitbouw.

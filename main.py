@@ -1,7 +1,6 @@
 """
 Sales Lead Agent - Main Entry Point
-===================================
-Deterministic LangGraph pipeline.
+4 agents + deterministic LangGraph + hard Python checks
 """
 
 from dotenv import load_dotenv
@@ -16,11 +15,10 @@ die actief zijn in marketing automation of sales tools.
 
 def main():
     print("=" * 60)
-    print("Sales Lead Agent (LangGraph) wordt gestart...")
+    print("Sales Lead Agent (4 agents) wordt gestart...")
     print("=" * 60)
     print(f"\nZoekcriteria:\n{SEARCH_CRITERIA.strip()}\n")
 
-    print("→ LangGraph workflow wordt opgebouwd...")
     app = build_workflow()
 
     initial_state = {
@@ -30,7 +28,6 @@ def main():
         "market_insights": "",
         "scored_leads": [],
         "messages": [],
-        "approved_messages": [],
         "current_step": "start",
         "error": None
     }

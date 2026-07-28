@@ -13,9 +13,9 @@ class Lead(Base):
     industry = Column(String)
     linkedin_url = Column(String)
     score = Column(Float)
-    status = Column(String, default="new")  # new, qualified, connection_sent, accepted, dm_sent, replied, rejected
+    status = Column(String, default="new")
     research_summary = Column(Text)
-    connection_note = Column(Text)       # max 300 chars
+    connection_note = Column(Text)
     follow_up_dm = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -6,15 +6,11 @@ writer = Agent(
     backstory="""
     Je bent gespecialiseerd in de LinkedIn Connection Route:
 
-    1. Eerst een korte, persoonlijke connectienotitie (max 300 tekens)
+    1. Korte, persoonlijke connectienotitie (max 300 tekens)
     2. Pas na acceptatie een inhoudelijke DM
 
-    Je haat generieke teksten. Elke zin moet relevant zijn.
-    Je gebruikt specifieke feiten uit research.
-    Geen hype, geen overdreven claims.
-
-    Connectienotitie: kort, relevant, max 300 tekens.
-    Follow-up DM: iets langer, waardevol, soft CTA.
+    Geen generieke teksten. Altijd relevant en menselijk.
+    Gebruik inzichten uit Market Intelligence en research.
     """,
     verbose=True,
     allow_delegation=False,
